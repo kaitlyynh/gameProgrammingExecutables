@@ -31,8 +31,10 @@ constexpr int VIEWPORT_X      = 0,
               VIEWPORT_Y      = 0,
               VIEWPORT_WIDTH  = WINDOW_WIDTH,
               VIEWPORT_HEIGHT = WINDOW_HEIGHT;
+
 constexpr char V_SHADER_PATH[] = "shaders/vertex_textured.glsl",
                F_SHADER_PATH[] = "shaders/fragment_textured.glsl";
+
 constexpr float MILLISECONDS_IN_SECOND = 1000.0;
 constexpr GLint NUMBER_OF_TEXTURES = 1, // to be generated, that is
                 LEVEL_OF_DETAIL    = 0, // mipmap reduction image level
@@ -197,8 +199,8 @@ glm::vec3 g_goomba_ball3_movement = glm::vec3(-1.4f, -0.25f, 0.0f);
 glm::vec3 g_goomba_ball2_movement_prev = glm::vec3(-1.2f, -0.25f, 0.0f);
 glm::vec3 g_goomba_ball3_movement_prev = glm::vec3(-1.4f, -0.25f, 0.0f);
 // Scaling vectors
-glm::vec3 g_paddle_scale = glm::vec3(0.5f, 1.0f, 0.0f);
-glm::vec3 g_divider_scale = glm::vec3(2.0f, 6.0f, 0.0f);
+glm::vec3 g_paddle_scale = glm::vec3(1.0f, 1.0f, 0.0f);
+glm::vec3 g_divider_scale = glm::vec3(7.0f, 5.0f, 0.0f);
 glm::vec3 g_ball_scale = glm::vec3(0.5f, 0.5f, 0.0f);
 // Read keystroke input
 const Uint8 *key_state = SDL_GetKeyboardState(NULL); // if non-NULL, receives the length of the returned array
@@ -304,8 +306,7 @@ void process_input()
     }
 }
 // Initialize incremental variables
-int ticks = 0;
-int heartbeat_ticks = 0;
+
 constexpr int   G_MAX_FRAME     = 40;
 constexpr float G_GROWTH_FACTOR = 1.30f; // Grow by 30%
 constexpr float G_SHRINK_FACTOR = 0.70f; // Shrink by 30%
@@ -330,7 +331,7 @@ constexpr float ball_width = 0.2f;
 constexpr float ball_height = 0.2f;
 constexpr float paddle_width = 0.2f;
 constexpr float paddle_height = 1.0f;
-constexpr float ball_speed = 3.0f;
+constexpr float ball_speed = 2.0f;
 // ball 1
 float x_distance_p1;
 float y_distance_p1;
@@ -346,25 +347,15 @@ float x_distance3_p1;
 float y_distance3_p1;
 float x_distance3_p2;
 float y_distance3_p2;
+
 constexpr float COLLISION_FACTOR = 0.030f;
 void update()
 {
     /* Update incremental variables */
-    float curr_ticks = (float) SDL_GetTicks() / 1000.0f;
+    float curr_ticks = (float) SDL_GetTicks() / MILLISECONDS_IN_SECOND;
     float delta_time = curr_ticks - prev_ticks;
     prev_ticks = curr_ticks;
-    
-    /* Transformations */
-    ticks++;
-    // Normalize
-    if (glm::length(g_player1_movement) > 1.0f)
-    {
-        g_player1_movement = glm::normalize(g_player1_movement);
-    }
-    if (glm::length(g_player2_movement) > 1.0f)
-    {
-        g_player2_movement = glm::normalize(g_player2_movement);
-    }
+
     
     // Paddle 1 collisions with ball 1
     x_distance_p1 = fabs((g_player1_pos.x + g_paddle_scale.x * COLLISION_FACTOR) - (g_goomba_ball_pos.x + g_ball_scale.x)) - ((g_paddle_scale.x + g_ball_scale.x) / 2.0f);
@@ -459,18 +450,15 @@ void update()
         LOG("Paddle 2 collision 3");
     }
     
-    
-    
-    
-    // goomba ball bounds
-    if (g_goomba_ball_pos.y <= window_lower_bound) { // goomba ball upper and lower bounds
+    // Ball Window Bounds
+    // Ball Upper and Lower Bounds
+    if (g_goomba_ball_pos.y <= window_lower_bound) {
         g_goomba_ball_pos.y = window_lower_bound;
         g_goomba_ball_movement.y *= -1.0f;
         LOG("Lower window hit");
     } else if (g_goomba_ball_pos.y >= window_upper_bound) {
         g_goomba_ball_pos.y = window_upper_bound;
         g_goomba_ball_movement.y *= -1.0f;
-//        left_or_right_hit = true;
         LOG("Upper window hit");
     }
     
@@ -481,22 +469,20 @@ void update()
     } else if (g_goomba_ball2_pos.y >= window_upper_bound) {
         g_goomba_ball2_pos.y = window_upper_bound;
         g_goomba_ball2_movement.y *= -1.0f;
-//        left_or_right_hit2 = true;
         LOG("Upper window hit");
         
     }
     if (g_goomba_ball3_pos.y <= window_lower_bound) {
         g_goomba_ball3_pos.y = window_lower_bound;
         g_goomba_ball3_movement.y *= -1.0f;
-//        LOG("Lower window hit");
+        LOG("Lower window hit");
     } else if (g_goomba_ball3_pos.y >= window_upper_bound) {
         g_goomba_ball3_pos.y = window_upper_bound;
         g_goomba_ball3_movement.y *= -1.0f;
-//        left_or_right_hit3 = true;
         LOG("Upper window hit");
         
     }
-    // goomba ball left and right bounds
+    // Ball Left and Right Bounds
     if (g_goomba_ball_pos.x <= window_left_bound) { // player 2 wins
         g_goomba_ball_pos.x = window_left_bound;
         g_goomba_ball_movement.x *= -1.0f;
@@ -545,7 +531,7 @@ void update()
         left_or_right_hit3 = true;
     }
     
-    // paddle bounds
+    // Paddle Bounds
     if (g_player1_pos.y <= window_lower_bound) { // player 1 paddle bounds
         g_player1_pos.y = window_lower_bound;
     } else if (g_player1_pos.y - g_paddle_scale.y >= window_upper_bound) {
@@ -561,34 +547,44 @@ void update()
         g_player2_movement.y *= -1.0f;
     }
     
+    // Normalize
+    if (glm::length(g_player1_movement) > 1.0f)
+    {
+        g_player1_movement = glm::normalize(g_player1_movement);
+    }
     if (glm::length(g_player2_movement) > 1.0f)
     {
         g_player2_movement = glm::normalize(g_player2_movement);
     }
-    g_player1_pos += g_player1_movement * (g_player_speed * delta_time); // Gliding behavior? Fixed
+    
+    g_player1_pos += g_player1_movement * (g_player_speed * delta_time);
     g_player2_pos += g_player2_movement * (g_player_speed * delta_time);
     
-    if (!winner_declared) {
-        g_goomba_ball_pos += g_goomba_ball_movement * (ball_speed * delta_time);
-        
-        if (ball_count == 2) {
-            g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
-        }
-        else if (ball_count == 3) {
-            g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
-            g_goomba_ball3_pos += g_goomba_ball3_movement * (ball_speed * delta_time);
-        }
-    }
-//    g_goomba_ball_pos += g_goomba_ball_movement * (ball_speed * delta_time);
+    
+    // Check if game should still continue
+//    if (!winner_declared) {
+//        g_goomba_ball_pos += g_goomba_ball_movement * (ball_speed * delta_time);
 //
-//    if (ball_count == 2) {
-//        g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
-//    }
-//    else if (ball_count == 3) {
-//        g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
-//        g_goomba_ball3_pos += g_goomba_ball3_movement * (ball_speed * delta_time);
+//        if (ball_count == 2) {
+//            g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
+//        }
+//        else if (ball_count == 3) {
+//            g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
+//            g_goomba_ball3_pos += g_goomba_ball3_movement * (ball_speed * delta_time);
+//        }
 //    }
     
+    g_goomba_ball_pos += g_goomba_ball_movement * (ball_speed * delta_time);
+
+    if (ball_count == 2) {
+        g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
+    }
+    else if (ball_count == 3) {
+        g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
+        g_goomba_ball3_pos += g_goomba_ball3_movement * (ball_speed * delta_time);
+    }
+    
+    // Translation and Scaling
     g_mario_matrix_l = glm::mat4(1.0f);
     g_mario_matrix_r = glm::mat4(1.0f);
     g_goomba_matrix_m = glm::mat4(1.0f);
@@ -596,17 +592,19 @@ void update()
     g_goomba_ball2_matrix = glm::mat4(1.0f);
     g_goomba_ball3_matrix = glm::mat4(1.0f);
     
-    // move items if game is still running
+    // Translate items if game is to continue
     g_mario_matrix_l = glm::translate(g_mario_matrix_l, g_player1_pos);
     g_mario_matrix_r = glm::translate(g_mario_matrix_r, g_player2_pos);
     g_goomba_matrix_m = glm::translate(g_goomba_matrix_m, middle_line_pos);
     g_goomba_ball_matrix = glm::translate(g_goomba_ball_matrix, g_goomba_ball_pos);
     
+    // Scale items after translating
     g_mario_matrix_l = glm::scale(g_mario_matrix_l, g_paddle_scale);
     g_mario_matrix_r = glm::scale(g_mario_matrix_r, g_paddle_scale);
     g_goomba_matrix_m = glm::scale(g_goomba_matrix_m, g_divider_scale);
     g_goomba_ball_matrix = glm::scale(g_goomba_ball_matrix, g_ball_scale);
     
+    // Render based on number of balls selected
     if (ball_count == 2) {
         g_goomba_ball2_matrix = glm::translate(g_goomba_ball2_matrix, g_goomba_ball2_pos);
         g_goomba_ball2_matrix = glm::scale(g_goomba_ball2_matrix, g_ball_scale);
@@ -620,8 +618,10 @@ void update()
     }
     
 }
+
 bool show_text1 = false;
 bool show_text2 = false;
+
 void draw_object(glm::mat4 &object_g_model_matrix, GLuint &object_texture_id)
 {
     g_shader_program.set_model_matrix(object_g_model_matrix);
@@ -632,20 +632,21 @@ void render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
     // Vertices
-    float vertices[] = // Paddle Vertices , width = 0.2f , height = 1.0f
+    float vertices[] =
     {
-        -0.1f, -0.5f,   0.1f, -0.5f,   0.1f,  0.5f,   // Object 1 (right half of the paddle)
-        -0.1f, -0.5f,   0.1f,  0.5f,  -0.1f,  0.5f    // Object 2 (left half of the paddle)
+        -0.1f, -0.5f,   0.1f, -0.5f,   0.1f,  0.5f,
+        -0.1f, -0.5f,   0.1f,  0.5f,  -0.1f,  0.5f
     };
     
     // Textures
-    float texture_coordinates[] =
+    float texture_coordinates[] = // Map the Texture onto the Vertices
     {
-        0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,     // Map Texture 1 to Vertices 1
+        0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
         0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
     };
-    glVertexAttribPointer(g_shader_program.get_position_attribute(), 2, GL_FLOAT, false, // set shape to paddle
+    glVertexAttribPointer(g_shader_program.get_position_attribute(), 2, GL_FLOAT, false, // Declare shape to the "paddle"
                           0, vertices);
+    
     glEnableVertexAttribArray(g_shader_program.get_position_attribute());
     glVertexAttribPointer(g_shader_program.get_tex_coordinate_attribute(), 2, GL_FLOAT,
                           false, 0, texture_coordinates);
@@ -657,22 +658,23 @@ void render()
     
     draw_object(g_goomba_matrix_m, g_goomba_texture_id); // draw the divider
     
-    
+    // Draw the ball
     if (ball_count == 1) {
-        draw_object(g_goomba_ball_matrix, g_goomba_texture_id); // draw the ball
+        draw_object(g_goomba_ball_matrix, g_goomba_texture_id);
     }
     else if (ball_count == 2) {
-        draw_object(g_goomba_ball_matrix, g_goomba_texture_id); // draw the ball
+        draw_object(g_goomba_ball_matrix, g_goomba_texture_id);
         draw_object(g_goomba_ball2_matrix, g_goomba_texture_id);
     }
     else if (ball_count == 3) {
-        draw_object(g_goomba_ball_matrix, g_goomba_texture_id); // draw the ball
+        draw_object(g_goomba_ball_matrix, g_goomba_texture_id);
         draw_object(g_goomba_ball2_matrix, g_goomba_texture_id);
-        draw_object(g_goomba_ball3_matrix, g_goomba_texture_id); // draw the ball
+        draw_object(g_goomba_ball3_matrix, g_goomba_texture_id);
     }
-    //Draw text
+    
+    //Draw winner text
     if (player1_wins && !player2_wins && !winner_declared) {
-        draw_text(&g_shader_program, g_font_texture_id, "PLAYER 1 WINS", 0.5f, 0.05f, glm::vec3(-3.5f, 2.0f, 0.0f));
+        draw_text(&g_shader_program, g_font_texture_id, "Player 1 wins", 0.5f, 0.05f, glm::vec3(-3.5f, 2.0f, 0.0f));
         winner_declared = true;
         show_text1 = true;
     } else if (player2_wins && !player1_wins && !winner_declared) {
@@ -681,14 +683,14 @@ void render()
         show_text2 = true;
     }
     
+    //
     if (show_text1) {
         draw_text(&g_shader_program, g_font_texture_id, "PLAYER 1 WINS", 0.5f, 0.05f, glm::vec3(-3.5f, 2.0f, 0.0f));
     } else if (show_text2) {
         draw_text(&g_shader_program, g_font_texture_id, "PLAYER 2 WINS", 0.5f, 0.05f, glm::vec3(-3.5f, 2.0f, 0.0f));
     }
     
-    
-    
+
     // We disable two attribute arrays now
     glDisableVertexAttribArray(g_shader_program.get_position_attribute());
     glDisableVertexAttribArray(g_shader_program.get_tex_coordinate_attribute());
