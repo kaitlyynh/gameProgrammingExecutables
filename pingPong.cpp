@@ -38,6 +38,7 @@ constexpr GLint NUMBER_OF_TEXTURES = 1, // to be generated, that is
                 LEVEL_OF_DETAIL    = 0, // mipmap reduction image level
                 TEXTURE_BORDER     = 0; // this value MUST be zero
 constexpr char MARIO_SPRITE_FILEPATH[]    = "assets/mario4.png",
+               LUIGI_SPRITE_FILEPATH[] = "assets/luigi.png",
                GOOMBA_SPRITE_FILEPATH[] = "assets/goomba.png";
 constexpr char FONTSHEET_FILEPATH[] = "assets/font1.png";
 GLuint g_font_texture_id;
@@ -113,7 +114,9 @@ glm::mat4 g_view_matrix,
         
 float g_previous_ticks = 0.0f;
 GLuint g_mario_texture_id,
+       g_luigi_texture_id,
        g_goomba_texture_id;
+
 GLuint load_texture(const char* filepath)
 {
     // STEP 1: Loading the image file
@@ -140,7 +143,7 @@ void initialise()
 {
     // Initialise video and joystick subsystems
     SDL_Init(SDL_INIT_VIDEO);
-    g_display_window = SDL_CreateWindow("PING PONG!",
+    g_display_window = SDL_CreateWindow("2D Ping Pong Game!",
                                       SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                       WINDOW_WIDTH, WINDOW_HEIGHT,
                                       SDL_WINDOW_OPENGL);
@@ -172,6 +175,7 @@ void initialise()
     glUseProgram(g_shader_program.get_program_id());
     glClearColor(0.678f, 0.847f, 0.902f, 1.0f); // Pastel blue coloerd background
     g_mario_texture_id   = load_texture(MARIO_SPRITE_FILEPATH);
+    g_luigi_texture_id = load_texture(LUIGI_SPRITE_FILEPATH);
     g_goomba_texture_id = load_texture(GOOMBA_SPRITE_FILEPATH);
     g_font_texture_id = load_texture(FONTSHEET_FILEPATH);
     glEnable(GL_BLEND);
@@ -187,7 +191,7 @@ glm::vec3 g_goomba_ball3_pos = glm::vec3(0.0f, 0.0f, 0.0f);
 // Track overall movement triggers
 glm::vec3 g_player1_movement = glm::vec3(0.0f);
 glm::vec3 g_player2_movement = glm::vec3(0.0f);
-glm::vec3 g_goomba_ball_movement = glm::vec3(-1.0f, -0.25f, 0.0f); // have the ball move lower bottom
+glm::vec3 g_goomba_ball_movement = glm::vec3(-0.5f, -0.75f, 0.0f); // have the ball move lower bottom
 glm::vec3 g_goomba_ball2_movement = glm::vec3(-1.2f, -0.25f, 0.0f);
 glm::vec3 g_goomba_ball3_movement = glm::vec3(-1.4f, -0.25f, 0.0f);
 glm::vec3 g_goomba_ball2_movement_prev = glm::vec3(-1.2f, -0.25f, 0.0f);
@@ -215,7 +219,12 @@ void process_input()
     while (SDL_PollEvent(&event))
     {
 //        if (left_or_right_hit) { // ball hit the left or right of the window
-//            g_app_status = TERMINATED;
+//            g_goomba_ball_movement.x = 0.0f;
+//            g_goomba_ball_movement.y = 0.0f;
+//            g_goomba_ball2_movement.x = 0.0f;
+//            g_goomba_ball2_movement.y = 0.0f;
+//            g_goomba_ball3_movement.x = 0.0f;
+//            g_goomba_ball3_movement.y = 0.0f;
 //            left_or_right_hit = true; // delete later
 //            break;
 //        }
@@ -370,7 +379,7 @@ void update()
         ball_move_left = !ball_move_left;
         LOG("Paddle 1 collision");
         LOG(x_distance_p1);
-        LOG(y_distance_p1); 
+        LOG(y_distance_p1);
     }
     
     // Paddle 2 collisions with ball 1
@@ -559,16 +568,26 @@ void update()
     g_player1_pos += g_player1_movement * (g_player_speed * delta_time); // Gliding behavior? Fixed
     g_player2_pos += g_player2_movement * (g_player_speed * delta_time);
     
-    g_goomba_ball_pos += g_goomba_ball_movement * (ball_speed * delta_time);
-    
-    if (ball_count == 2) {
-        g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
+    if (!winner_declared) {
+        g_goomba_ball_pos += g_goomba_ball_movement * (ball_speed * delta_time);
+        
+        if (ball_count == 2) {
+            g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
+        }
+        else if (ball_count == 3) {
+            g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
+            g_goomba_ball3_pos += g_goomba_ball3_movement * (ball_speed * delta_time);
+        }
     }
-    else if (ball_count == 3) {
-        g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
-        g_goomba_ball3_pos += g_goomba_ball3_movement * (ball_speed * delta_time);
-    }
-    
+//    g_goomba_ball_pos += g_goomba_ball_movement * (ball_speed * delta_time);
+//
+//    if (ball_count == 2) {
+//        g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
+//    }
+//    else if (ball_count == 3) {
+//        g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
+//        g_goomba_ball3_pos += g_goomba_ball3_movement * (ball_speed * delta_time);
+//    }
     
     g_mario_matrix_l = glm::mat4(1.0f);
     g_mario_matrix_r = glm::mat4(1.0f);
@@ -633,7 +652,7 @@ void render()
     glEnableVertexAttribArray(g_shader_program.get_tex_coordinate_attribute());
     
     draw_object(g_mario_matrix_l, g_mario_texture_id); // draw the paddles
-    draw_object(g_mario_matrix_r, g_mario_texture_id);
+    draw_object(g_mario_matrix_r, g_luigi_texture_id);
     
     
     draw_object(g_goomba_matrix_m, g_goomba_texture_id); // draw the divider
