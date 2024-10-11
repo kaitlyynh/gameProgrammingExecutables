@@ -321,7 +321,7 @@ float goomba_radius = 1.5;
 glm::vec3 mario_circular_translate = glm::vec3(0.0f);
 glm::vec3 goomba_circular_translate = glm::vec3(0.0f);
 glm::vec3 rotate_z_plane = glm::vec3(0.0f, 0.0f, 1.0f);
-constexpr float g_player_speed = 1.5f;
+constexpr float g_player_speed = 2.0sf;
 constexpr float window_upper_bound = 3.75f;
 constexpr float window_lower_bound = -3.75f;
 constexpr float window_left_bound = -5.0f;
@@ -534,14 +534,15 @@ void update()
     // Paddle Bounds
     if (g_player1_pos.y <= window_lower_bound) { // player 1 paddle bounds
         g_player1_pos.y = window_lower_bound;
-    } else if (g_player1_pos.y - g_paddle_scale.y >= window_upper_bound) {
-        g_player1_pos.y = window_upper_bound;
+        LOG("Trigger 1");
+    } else if (g_player1_pos.y >= window_upper_bound) {
         g_player1_movement.y *= -1.0f;
+        LOG("Trigger 2");
     }
     
     if (g_player2_pos.y <= window_lower_bound) { // player 2 paddle bounds
         g_player2_pos.y = window_lower_bound;
-        g_player2_movement.y *= -1.0f;
+        g_player2_movement.y *= -1.0f; // For single player mode
     } else if (g_player2_pos.y >= window_upper_bound) {
         g_player2_pos.y = window_upper_bound;
         g_player2_movement.y *= -1.0f;
@@ -561,28 +562,28 @@ void update()
     g_player2_pos += g_player2_movement * (g_player_speed * delta_time);
     
     
-    // Check if game should still continue
-//    if (!winner_declared) {
-//        g_goomba_ball_pos += g_goomba_ball_movement * (ball_speed * delta_time);
-//
-//        if (ball_count == 2) {
-//            g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
-//        }
-//        else if (ball_count == 3) {
-//            g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
-//            g_goomba_ball3_pos += g_goomba_ball3_movement * (ball_speed * delta_time);
-//        }
-//    }
-    
-    g_goomba_ball_pos += g_goomba_ball_movement * (ball_speed * delta_time);
+//     Check if game should still continue
+    if (!winner_declared) {
+        g_goomba_ball_pos += g_goomba_ball_movement * (ball_speed * delta_time);
 
-    if (ball_count == 2) {
-        g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
+        if (ball_count == 2) {
+            g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
+        }
+        else if (ball_count == 3) {
+            g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
+            g_goomba_ball3_pos += g_goomba_ball3_movement * (ball_speed * delta_time);
+        }
     }
-    else if (ball_count == 3) {
-        g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
-        g_goomba_ball3_pos += g_goomba_ball3_movement * (ball_speed * delta_time);
-    }
+    
+//    g_goomba_ball_pos += g_goomba_ball_movement * (ball_speed * delta_time);
+//
+//    if (ball_count == 2) {
+//        g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
+//    }
+//    else if (ball_count == 3) {
+//        g_goomba_ball2_pos += g_goomba_ball2_movement * (ball_speed * delta_time);
+//        g_goomba_ball3_pos += g_goomba_ball3_movement * (ball_speed * delta_time);
+//    }
     
     // Translation and Scaling
     g_mario_matrix_l = glm::mat4(1.0f);
